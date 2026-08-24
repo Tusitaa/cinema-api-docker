@@ -109,15 +109,48 @@ Exemplo de JSON para criar ou atualizar um ingresso:
 }
 ```
 
+## Como rodar a API com Docker
+
+Na raiz do projeto, crie a imagem:
+
+```bash
+docker build -t cinema-api:1.0 .
+```
+
+Com o MySQL rodando na maquina host, use `host.docker.internal` para que o
+container consiga acessar o banco:
+
+```bash
+docker run --rm \
+    -p 8080:8080 \
+    -e DB_SERVER_URL=host.docker.internal \
+    -e DB_SERVER_PORT=3306 \
+    -e DB_SCHEMA=cinema \
+    -e DB_USER=root \
+    -e DB_PWD=root_pwd \
+    cinema-api:1.0
+```
+
+A API fica disponivel em `http://localhost:8080`.
+
 ## Configuracao do banco
 
-As configuracoes atuais estao em `src/main/resources/application.properties`:
+As configuracoes estao em `src/main/resources/application.properties` e podem ser
+sobrescritas por variaveis de ambiente:
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/cinema?createDatabaseIfNotExist=true
-spring.datasource.username=root
-spring.datasource.password=root_pwd
-spring.jpa.hibernate.ddl-auto=update
-```
+| Variavel | Descricao | Padrao |
+|---|---|---|
+| `DB_SERVER_URL` | Endereco do servidor MySQL | `localhost` |
+| `DB_SERVER_PORT` | Porta do MySQL | `3306` |
+| `DB_SCHEMA` | Nome do banco | `cinema` |
+| `DB_USER` | Usuario do banco | `root` |
+| `DB_PWD` | Senha do banco | `root_pwd` |
+| `SPRING_PROFILES_ACTIVE` | Profile ativo do Spring | `dev` no container |
+
+Sem nenhuma variavel definida, a aplicacao usa `localhost:3306` e o banco `cinema`,
+o que atende a execucao local com `mvn spring-boot:run`.
+
+O profile `dev` (padrao na imagem Docker) usa o banco `cinema_dev` para nao
+misturar os dados com a execucao local.
 
 O Hibernate esta configurado com `ddl-auto=update`, entao as tabelas sao criadas ou atualizadas automaticamente ao iniciar a aplicacao.
